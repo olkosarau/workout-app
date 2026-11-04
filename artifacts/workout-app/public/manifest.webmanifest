@@ -1,0 +1,26 @@
+{
+  "name": "Личный ритм — тренировки и прогресс",
+  "short_name": "Личный ритм",
+  "description": "Личный журнал тренировок, питания и прогресса.",
+  "lang": "ru",
+  "start_url": "./#/",
+  "scope": "./",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "background_color": "#f7f7f1",
+  "theme_color": "#173d32",
+  "icons": [
+    {
+      "src": "./icons/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icons/app-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

@@ -1,0 +1,687 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: Workout planner and personal progress API
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: auth
+    description: Account registration and sessions
+  - name: workouts
+    description: Workout and meal catalog
+  - name: progress
+    description: Personal activity and progress
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: opaque
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    Account:
+      type: object
+      properties:
+        id:
+          type: string
+        email:
+          type: string
+          format: email
+      required: [id, email]
+    AuthInput:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 10
+          maxLength: 128
+      required: [email, password]
+    AuthSession:
+      type: object
+      properties:
+        account:
+          $ref: "#/components/schemas/Account"
+        token:
+          type: string
+      required: [account, token]
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required: [success]
+    Workout:
+      type: object
+      properties:
+        id:
+          type: string
+        title:
+          type: string
+        youtubeId:
+          type: string
+        durationMin:
+          type: integer
+        category:
+          type: string
+          enum: [tabata, cardio, fullbody, upper]
+        notes:
+          type: [string, "null"]
+      required: [id, title, youtubeId, durationMin, category, notes]
+    Ingredient:
+      type: object
+      properties:
+        name:
+          type: string
+        amount:
+          type: number
+        unit:
+          type: string
+          enum: [г, мл, шт]
+      required: [name, amount, unit]
+    Meal:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [breakfast, lunch, dinner, snack]
+        name:
+          type: string
+        kcal:
+          type: integer
+        protein:
+          type: integer
+        prepMin:
+          type: integer
+        ingredients:
+          type: array
+          items:
+            $ref: "#/components/schemas/Ingredient"
+        steps:
+          type: string
+      required: [id, type, name, kcal, protein, prepMin, ingredients, steps]
+    PlanItem:
+      type: object
+      properties:
+        workoutId:
+          type: string
+        title:
+          type: string
+        durationMin:
+          type: integer
+        notes:
+          type: [string, "null"]
+      required: [workoutId, title, durationMin, notes]
+    PlanDay:
+      type: object
+      properties:
+        day:
+          type: integer
+          minimum: 1
+          maximum: 7
+        title:
+          type: string
+        rest:
+          type: boolean
+        note:
+          type: [string, "null"]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlanItem"
+      required: [day, title, rest, note, items]
+    WeekPlan:
+      type: object
+      properties:
+        week:
+          type: array
+          items:
+            $ref: "#/components/schemas/PlanDay"
+      required: [week]
+    Profile:
+      type: object
+      properties:
+        sex:
+          type: string
+          enum: [female, male]
+        age:
+          type: integer
+          minimum: 16
+          maximum: 100
+        heightCm:
+          type: number
+          minimum: 120
+          maximum: 230
+        weightKg:
+          type: number
+          minimum: 30
+          maximum: 250
+        activity:
+          type: number
+          enum: [1.2, 1.375, 1.55]
+        goal:
+          type: string
+          enum: [lose, maintain, gain]
+        level:
+          type: string
+          enum: [beginner, intermediate, advanced]
+      required: [sex, age, heightCm, weightKg, activity, goal, level]
+    ProfileResponse:
+      type: object
+      properties:
+        profile:
+          anyOf:
+            - $ref: "#/components/schemas/Profile"
+            - type: "null"
+      required: [profile]
+    Completion:
+      type: object
+      properties:
+        id:
+          type: string
+        workoutId:
+          type: string
+        date:
+          type: string
+          format: date
+        completedAt:
+          type: string
+          format: date-time
+      required: [id, workoutId, date, completedAt]
+    CompletionInput:
+      type: object
+      properties:
+        workoutId:
+          type: string
+        date:
+          type: string
+          format: date
+      required: [workoutId, date]
+    WeightLog:
+      type: object
+      properties:
+        id:
+          type: string
+        date:
+          type: string
+          format: date
+        kg:
+          type: number
+      required: [id, date, kg]
+    WeightInput:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        kg:
+          type: number
+          minimum: 30
+          maximum: 250
+      required: [date, kg]
+    WaterLog:
+      type: object
+      properties:
+        id:
+          type: string
+        ml:
+          type: integer
+        createdAt:
+          type: string
+          format: date-time
+      required: [id, ml, createdAt]
+    WaterSummary:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        totalMl:
+          type: integer
+        goalMl:
+          type: integer
+        entries:
+          type: array
+          items:
+            $ref: "#/components/schemas/WaterLog"
+      required: [date, totalMl, goalMl, entries]
+    WaterInput:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        ml:
+          type: integer
+          minimum: 50
+          maximum: 2000
+      required: [date, ml]
+    DailyAnalytics:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        workouts:
+          type: integer
+        waterMl:
+          type: integer
+        weightKg:
+          type: [number, "null"]
+      required: [date, workouts, waterMl, weightKg]
+    Analytics:
+      type: object
+      properties:
+        days:
+          type: array
+          items:
+            $ref: "#/components/schemas/DailyAnalytics"
+      required: [days]
+    Overview:
+      type: object
+      properties:
+        date:
+          type: string
+          format: date
+        profileComplete:
+          type: boolean
+        totalCompleted:
+          type: integer
+        weekDays:
+          type: integer
+        weeklyGoal:
+          type: integer
+        streak:
+          type: integer
+        bestStreak:
+          type: integer
+        todayWaterMl:
+          type: integer
+        waterGoalMl:
+          type: integer
+        latestWeightKg:
+          type: [number, "null"]
+      required: [date, profileComplete, totalCompleted, weekDays, weeklyGoal, streak, bestStreak, todayWaterMl, waterGoalMl, latestWeightKg]
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+  /auth/register:
+    post:
+      operationId: registerAccount
+      tags: [auth]
+      summary: Register an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthInput"
+      responses:
+        "201":
+          description: Account created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+        "400":
+          description: Invalid registration data
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+        "409":
+          description: Email is already registered
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/login:
+    post:
+      operationId: loginAccount
+      tags: [auth]
+      summary: Sign in to an account
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AuthInput"
+      responses:
+        "200":
+          description: Signed in
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthSession"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/me:
+    get:
+      operationId: getCurrentAccount
+      tags: [auth]
+      summary: Get the current account
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Current account
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Account"
+        "401":
+          description: Authentication required
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  /auth/logout:
+    post:
+      operationId: logoutAccount
+      tags: [auth]
+      summary: Revoke the current session
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Signed out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+  /catalog/workouts:
+    get:
+      operationId: getWorkouts
+      tags: [workouts]
+      summary: List workout videos
+      responses:
+        "200":
+          description: Workout catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Workout"
+  /catalog/meals:
+    get:
+      operationId: getMeals
+      tags: [workouts]
+      summary: List meal recipes
+      responses:
+        "200":
+          description: Meal catalog
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Meal"
+  /schedule/week:
+    get:
+      operationId: getWeekPlan
+      tags: [workouts]
+      summary: Get the weekly workout plan
+      responses:
+        "200":
+          description: Seven-day schedule
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeekPlan"
+  /overview:
+    get:
+      operationId: getOverview
+      tags: [progress]
+      summary: Get current progress summary
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: date
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Progress summary
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Overview"
+  /profile:
+    get:
+      operationId: getProfile
+      tags: [progress]
+      summary: Get the account profile
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Profile or an empty profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileResponse"
+    put:
+      operationId: saveProfile
+      tags: [progress]
+      summary: Save profile and workout level
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Profile"
+      responses:
+        "200":
+          description: Saved profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ProfileResponse"
+  /completions:
+    get:
+      operationId: getCompletions
+      tags: [progress]
+      summary: List completed workouts
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: from
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: to
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Completion history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Completion"
+    post:
+      operationId: addCompletion
+      tags: [progress]
+      summary: Mark a workout complete
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CompletionInput"
+      responses:
+        "201":
+          description: Completion saved
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Completion"
+  /completions/{id}:
+    delete:
+      operationId: deleteCompletion
+      tags: [progress]
+      summary: Remove a completion record
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Record removed
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+  /weights:
+    get:
+      operationId: getWeights
+      tags: [progress]
+      summary: List weight entries
+      security:
+        - bearerAuth: []
+      responses:
+        "200":
+          description: Weight history
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/WeightLog"
+    post:
+      operationId: saveWeight
+      tags: [progress]
+      summary: Add or update a weight entry
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WeightInput"
+      responses:
+        "200":
+          description: Saved weight
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WeightLog"
+  /water:
+    get:
+      operationId: getWater
+      tags: [progress]
+      summary: Get water intake for a date
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: date
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Daily water log
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WaterSummary"
+    post:
+      operationId: addWater
+      tags: [progress]
+      summary: Add water intake
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/WaterInput"
+      responses:
+        "201":
+          description: Water entry added
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/WaterSummary"
+  /analytics:
+    get:
+      operationId: getAnalytics
+      tags: [progress]
+      summary: Get activity and water history
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: from
+          required: true
+          schema:
+            type: string
+            format: date
+        - in: query
+          name: to
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        "200":
+          description: Daily progress values
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Analytics"
+

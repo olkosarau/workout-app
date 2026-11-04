@@ -1,0 +1,88 @@
+name: Deploy GitHub Pages
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "artifacts/workout-app/**"
+      - "lib/api-client-react/**"
+      - "lib/api-spec/**"
+      - "lib/api-zod/**"
+      - "package.json"
+      - "pnpm-lock.yaml"
+      - "pnpm-workspace.yaml"
+      - "tsconfig.base.json"
+      - ".github/workflows/deploy-pages.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: github-pages
+  cancel-in-progress: true
+
+jobs:
+  waiting-for-api:
+    if: ${{ vars.VITE_API_BASE_URL == '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Explain setup needed
+        run: |
+          echo "## GitHub Pages is waiting for the API URL" >> "$GITHUB_STEP_SUMMARY"
+          echo "Publish the API, then add the repository variable VITE_API_BASE_URL (the HTTPS origin only, without /api)." >> "$GITHUB_STEP_SUMMARY"
+
+  build:
+    if: ${{ vars.VITE_API_BASE_URL != '' }}
+    runs-on: ubuntu-latest
+    env:
+      BASE_PATH: /workout-app/
+      PORT: "4173"
+      VITE_API_BASE_URL: ${{ vars.VITE_API_BASE_URL }}
+    steps:
+      - name: Check out source
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Set up pnpm
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.26.1 --activate
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate API client
+        run: pnpm --filter @workspace/api-spec run codegen
+
+      - name: Check frontend types
+        run: pnpm --filter @workspace/workout-app run typecheck
+
+      - name: Build site
+        run: pnpm --filter @workspace/workout-app run build
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: artifacts/workout-app/dist/public
+
+  deploy:
+    if: ${{ vars.VITE_API_BASE_URL != '' }}
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
