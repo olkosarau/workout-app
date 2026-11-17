@@ -17,13 +17,14 @@ Neon Free не имеет срока окончания, но ограничен
 
 ### Первоначальная настройка
 
-1. Создайте бесплатную базу PostgreSQL в [Neon](https://neon.com/). Скопируйте её connection string; не публикуйте его и не добавляйте в файлы репозитория.
-2. Создайте в [Render](https://render.com/) Blueprint из этого репозитория. Render прочитает `render.yaml` и запросит `DATABASE_URL`; укажите connection string Neon. Не создавайте Render Postgres.
-3. В GitHub откройте **Settings → Secrets and variables → Actions → Secrets** и создайте секрет `DATABASE_URL` с тем же connection string. Затем вручную запустите workflow **Initialize database schema** один раз для новой пустой базы. Workflow создаёт таблицы; не запускайте его с URL базы, содержащей важные данные.
-4. После успешного запуска API возьмите его HTTPS-адрес Render. В GitHub откройте **Settings → Secrets and variables → Actions → Variables** и задайте `VITE_API_BASE_URL` значением origin API, без `/api`.
-5. В **Settings → Pages** выберите **GitHub Actions**, затем вручную запустите **Deploy GitHub Pages**. После этого адрес интерфейса будет `https://olkosarau.github.io/workout-app/`.
+1. Neon-проект `workout-app` уже создан в регионе AWS Frankfurt; таблицы приложения уже настроены. Не создавайте вторую базу для этого проекта и не запускайте на ней повторную инициализацию.
+2. Создайте аккаунт в [Render](https://render.com/) и выберите **New → Blueprint** для этого репозитория. Конфигурация задаёт бесплатный веб-сервис во Франкфурте. Когда Render запросит `DATABASE_URL`, вставьте строку подключения из Neon Console → проект `workout-app` → **Connect**. Не создавайте Render Postgres.
+3. После публикации API возьмите его origin из Render Dashboard. В GitHub откройте **Settings → Secrets and variables → Actions → Variables** и задайте `VITE_API_BASE_URL` этим HTTPS-origin без `/api`.
+4. В **Settings → Pages** выберите **GitHub Actions**, затем вручную запустите **Deploy GitHub Pages**. После успешной публикации интерфейс будет доступен по адресу `https://olkosarau.github.io/workout-app/`.
 
-Новая Neon-база будет пустой. Данные и аккаунты из Replit или старой локальной базы Expo автоматически не переносятся. Оставьте текущую версию Replit без изменений, пока новая не проверена.
+Workflow **Initialize database schema** нужен только для новой пустой Neon-базы. Для его запуска сохраните connection string как GitHub Actions secret `DATABASE_URL`; не запускайте workflow с базой, в которой уже есть важные данные.
+
+В Neon уже созданы таблицы, но пользовательских данных пока нет. Данные и аккаунты из Replit или старой локальной базы Expo автоматически не переносятся. Оставьте текущую версию Replit без изменений, пока новая не проверена.
 
 Переменная `VITE_API_BASE_URL` не является секретом: её значение попадёт в собранный JavaScript. Не указывайте в ней пароль, токен или URL с учётными данными. Пароль Neon храните только в секрете GitHub Actions и в защищённых настройках Render.
 
